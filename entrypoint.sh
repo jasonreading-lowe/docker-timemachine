@@ -4,21 +4,23 @@ set -e
 
 mkdir -p /conf.d/netatalk
 
-if [ ! -e /.initialized_afp ]; then
-    rm /etc/afp.conf
+if [ ! -e /.initialized_user ]; then
 
-    echo "[Global]
-    mimic model = Xserve
-    log file = /var/log/afpd.log
-    log level = default:warn
-    zeroconf = no" >> /etc/afp.conf
+    addgroup afp
 
-    touch /.initialized_afp
-fi
+    adduser -S -H -G root munkiadmin
+    echo munkiadmin:test | chpasswd
+    adduser -S -H -G root casperadmin
+    echo casperadmin:test | chpasswd
+    adduser -S -H -G root readonly
+    echo readonly:test | chpasswd
 
-if [ ! -e /.initialized_user ] && [ ! -z $AFP_LOGIN ] && [ ! -z $AFP_PASSWORD ] && [ ! -z $AFP_NAME ]; then
-    add-account $AFP_LOGIN $AFP_PASSWORD $AFP_NAME $AFP_SIZE_LIMIT
     touch /.initialized_user
 fi
+
+#chgrp -R afp /shares/
+chmod +x /shares
+chmod +x /shares/*
+chmod +x /start_netatalk.sh
 
 /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
